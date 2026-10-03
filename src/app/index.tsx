@@ -127,7 +127,6 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.ageRow}>
-
               <Text style={styles.ageText}>
                 18+ only • Safe dating • Real connections
               </Text>
