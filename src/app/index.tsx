@@ -1,15 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { type ReactNode, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
-  ImageBackground,
+  Animated,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+
+const heroImages = [
+  require('../../assets/hero-image.jpg'),
+  require('../../assets/blackcouple.jpg'),
+  require('../../assets/blackdating.jpg'),
+  require('../../assets/happy1.jpg'),
+];
 
 function GlassCard({ children, style }: { children: ReactNode; style?: any }) {
   return (
@@ -26,6 +34,55 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const aboutY = useRef(0);
   const howItWorksY = useRef(0);
+
+  // HERO SLIDESHOW
+  const opacities = useRef(
+    heroImages.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))
+  ).current;
+
+  const [topIndex, setTopIndex] = useState(0);
+  const [belowIndex, setBelowIndex] = useState(0);
+  const currentIndex = useRef(0);
+
+  useEffect(() => {
+    let mounted = true;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const startNextSlide = () => {
+      timer = setTimeout(() => {
+        if (!mounted) return;
+
+        const current = currentIndex.current;
+        const next = (current + 1) % heroImages.length;
+
+        // New image goes on top at opacity 0, old one stays fully visible below
+        opacities[next].setValue(0);
+        setBelowIndex(current);
+        setTopIndex(next);
+
+        Animated.timing(opacities[next], {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (!finished || !mounted) return;
+
+          opacities[current].setValue(0);
+          currentIndex.current = next;
+
+          startNextSlide();
+        });
+      }, 3500);
+    };
+
+    startNextSlide();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+      opacities.forEach((o) => o.stopAnimation());
+    };
+  }, [opacities]);
 
   const scrollToAbout = () => {
     scrollViewRef.current?.scrollTo({
@@ -55,11 +112,26 @@ export default function HomeScreen() {
         <View style={styles.glowFour} />
 
         {/* HERO */}
-        <ImageBackground
-          source={require('../../assets/hero-image.jpg')}
-          style={styles.heroSection}
-          imageStyle={styles.heroImage}
-        >
+        <View style={styles.heroSection}>
+          {/* HERO SLIDESHOW IMAGES */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            {heroImages.map((image, index) => (
+              <Animated.Image
+                key={index}
+                source={image}
+                style={[
+                  styles.heroImage,
+                  {
+                    opacity: opacities[index],
+                    zIndex:
+                      index === topIndex ? 2 : index === belowIndex ? 1 : 0,
+                  },
+                ]}
+                resizeMode="cover"
+              />
+            ))}
+          </View>
+
           <View style={styles.heroOverlay} />
 
           {/* TOP BAR */}
@@ -89,7 +161,9 @@ export default function HomeScreen() {
 
             <Text style={styles.heroTitle}>
               Meet someone{' '}
-              <Text style={styles.heroTitlePink}>worth talking to.</Text>
+              <Text style={styles.heroTitlePink}>
+                worth talking to.
+              </Text>
             </Text>
 
             <Text style={styles.heroText}>
@@ -132,7 +206,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-        </ImageBackground>
+        </View>
 
         {/* ABOUT */}
         <View
@@ -324,6 +398,59 @@ export default function HomeScreen() {
                 connect.
               </Text>
             </GlassCard>
+          </View>
+        </View>
+
+        {/* PROFILE MOSAIC */}
+        <View style={styles.profileSection}>
+          <View style={styles.profileGrid}>
+            <View style={styles.profileColumn}>
+              <Image
+                source={{
+                  uri: 'https://theshaderoom.com/wp-content/uploads/2026/08/IMG_2767-e1785943771857.jpeg',
+                }}
+                style={styles.profileImageTall}
+              />
+
+              <Image
+                source={{
+                  uri: 'https://preview.redd.it/rate-trinity-from-love-island-v0-4wvw8hve13bh1.jpg?width=640&crop=smart&auto=webp&s=742a3531a4d336825c0ff027dc780c5343f19bc3',
+                }}
+                style={styles.profileImageSmall}
+              />
+            </View>
+
+            <View style={styles.profileColumnMiddle}>
+              <Image
+                source={{
+                  uri: 'https://preview.redd.it/kayda-is-one-of-the-most-gorgeous-people-ive-laid-my-eyes-on-v0-mg76slaw3o5h1.png?width=1080&crop=smart&auto=webp&s=401d58b685445e6041c0dd40afaee0a5789fea52',
+                }}
+                style={styles.profileImageSmall}
+              />
+
+              <Image
+                source={{
+                  uri: 'https://www.justjared.com/wp-content/uploads/2026/06/aniya-love-island-dad.jpg?resize=640,427',
+                }}
+                style={styles.profileImageTall}
+              />
+            </View>
+
+            <View style={styles.profileColumn}>
+              <Image
+                source={{
+                  uri: 'https://wwd.com/wp-content/uploads/2026/06/GettyImages-2280275822.jpg?crop=0px%2C173px%2C2000px%2C1118px&resize=681%2C383',
+                }}
+                style={styles.profileImageTall}
+              />
+
+              <Image
+                source={{
+                  uri: 'https://hips.hearstapps.com/hmg-prod/images/185e7e93-74be-4431-aecd-f8dc08d60e70.jpg?crop=1xw:0.375xh;0xw,0.114xh&resize=1200:*',
+                }}
+                style={styles.profileImageSmall}
+              />
+            </View>
           </View>
         </View>
 
@@ -589,7 +716,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF5F8',
+    backgroundColor: '#eadde1',
   },
 
   scrollContent: {
@@ -613,7 +740,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: 'rgba(26, 14, 250, 0.06)',
+    backgroundColor: 'rgba(13, 67, 243, 0.07)',
     top: 1250,
     left: -160,
   },
@@ -623,7 +750,7 @@ const styles = StyleSheet.create({
     width: 340,
     height: 340,
     borderRadius: 170,
-    backgroundColor: 'rgba(18, 6, 240, 0.05)',
+    backgroundColor: 'rgba(13, 67, 243, 0.07)',
     top: 1800,
     right: -180,
   },
@@ -633,7 +760,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: 'rgba(23, 7, 248, 0.05)',
+    backgroundColor: 'rgba(13, 67, 243, 0.07)',
     top: 2350,
     left: -150,
   },
@@ -692,6 +819,7 @@ const styles = StyleSheet.create({
   },
 
   heroImage: {
+    ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
   },
@@ -958,6 +1086,51 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  /* PROFILE MOSAIC */
+
+  profileSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 5,
+    backgroundColor: '#5c2336',
+    height: 360,
+    borderRadius: 10,
+  },
+
+  profileGrid: {
+    width: '102%',
+    height: 350,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 5,
+  },
+
+  profileColumn: {
+    flex: 1,
+    gap: 8,
+  },
+
+  profileColumnMiddle: {
+    flex: 1,
+    gap: 8,
+    paddingTop: 25,
+  },
+
+  profileImageTall: {
+    width: '100%',
+    flex: 1.35,
+    borderRadius: 18,
+    backgroundColor: '#F1DCE4',
+  },
+
+  profileImageSmall: {
+    width: '100%',
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: '#F1DCE4',
+  },
+
+  /* SAFETY */
+
   safetyCard: {
     padding: 25,
   },
@@ -966,7 +1139,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: 'rgba(233,30,99,0.10)',
+    backgroundColor: 'rgba(13, 67, 243, 0.07)',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -1005,6 +1178,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
+
+  /* FINAL CTA */
 
   finalSection: {
     alignItems: 'center',
@@ -1054,16 +1229,18 @@ const styles = StyleSheet.create({
   },
 
   finalButtonText: {
-    color: '#FFFFFF',
+    color: '#f1eff4',
     fontSize: 16,
     fontWeight: '800',
   },
 
+  /* FOOTER */
+
   footer: {
-    backgroundColor: '#FFF0F5',
+    backgroundColor: '#572032',
     alignItems: 'center',
     paddingHorizontal: 25,
-    paddingTop: 45,
+    paddingTop: 5,
     paddingBottom: 30,
   },
 
@@ -1078,13 +1255,13 @@ const styles = StyleSheet.create({
   },
 
   footerBrand: {
-    color: '#222222',
+    color: '#eae4e4',
     fontSize: 22,
     fontWeight: '900',
   },
 
   footerTagline: {
-    color: '#888888',
+    color: '#e8e0e0',
     fontSize: 12,
     marginTop: 5,
     marginBottom: 30,
@@ -1092,7 +1269,7 @@ const styles = StyleSheet.create({
   },
 
   footerHeading: {
-    color: '#222222',
+    color: '#c09e9e',
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 14,
@@ -1108,7 +1285,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 58,
     borderRadius: 12,
-    backgroundColor: '#222222',
+    backgroundColor: '#0f0d0d',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 17,
@@ -1142,14 +1319,14 @@ const styles = StyleSheet.create({
   },
 
   footerColumnTitle: {
-    color: '#222222',
+    color: '#c29a9a',
     fontSize: 13,
     fontWeight: '800',
     marginBottom: 12,
   },
 
   footerLink: {
-    color: '#777777',
+    color: '#bdbbbb',
     fontSize: 12,
     lineHeight: 26,
   },

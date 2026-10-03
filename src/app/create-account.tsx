@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+
 import {
   Alert,
   ScrollView,
@@ -8,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -64,8 +67,6 @@ export default function CreateAccount() {
       return;
     }
 
-    // Account information is valid.
-    // For now, continue to profile setup.
     router.push('/profile-setup');
   };
 
@@ -84,7 +85,6 @@ export default function CreateAccount() {
 
         <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
-
           <Text style={styles.subtitle}>
             Create your account and start meeting new people in Ghana.
           </Text>
@@ -92,7 +92,6 @@ export default function CreateAccount() {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Full Name</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Enter your full name"
@@ -105,7 +104,6 @@ export default function CreateAccount() {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Email Address</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
@@ -120,7 +118,6 @@ export default function CreateAccount() {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Password</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Create a password"
@@ -130,7 +127,6 @@ export default function CreateAccount() {
             secureTextEntry
             autoCapitalize="none"
           />
-
           <Text style={styles.hint}>
             Password must be at least 8 characters.
           </Text>
@@ -138,7 +134,6 @@ export default function CreateAccount() {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Confirm Password</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Enter your password again"
